@@ -10,9 +10,9 @@
   <style>
     :root{
       --accent:#DEBA52;
-      --bg:#000;
-      --fg:#F5F5F5;
-      --fg-dim:#8E8E8E;
+      --bg:#0a0d1a;
+      --fg:#ffffff;
+      --fg-dim:#7a7c8b;
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{
@@ -24,83 +24,59 @@
       color:var(--fg);
       font-family:'Poppins',sans-serif;
     }
-    svg path.track{
-      stroke:var(--fg-dim);
-      stroke-width:.6;
-      fill:none;
-    }
-    svg .trail{
-      stroke:var(--accent);
-      stroke-width:2;
-      fill:none;
-      stroke-linecap:round;
-      animation:trail-anim var(--dur) linear infinite;
-      stroke-dasharray:.15 .85;
-      stroke-dashoffset:1;
-      pathLength:1;
-    }
-    @keyframes trail-anim{
-      to{stroke-dashoffset:-1;}
-    }
-    .dot{
-      fill:var(--accent);
-      filter:drop-shadow(0 0 4px var(--accent));
-    }
+    /* SVG sizing */
+    #stage{width:80vw;max-width:900px;height:auto}
+    /* Track */
+    .track{stroke:var(--fg-dim);stroke-width:1.2;fill:none;}
+    /* Light trail */
+    .trail{stroke:var(--accent);stroke-width:4;fill:none;stroke-linecap:round;animation:trail-anim var(--trailDur,8s) linear infinite;stroke-dasharray:.18 .82;stroke-dashoffset:1;pathLength:1;opacity:.7}
+    @keyframes trail-anim{to{stroke-dashoffset:-1;}}
+    /* Dots */
+    .dot{fill:var(--accent);filter:drop-shadow(0 0 6px var(--accent));}
   </style>
 </head>
 <body>
-  <svg width="400" height="240" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <defs>
-      <!-- Infinity path definition (flat figure-8) -->
-      <path id="infinityPath" d="M 100 120 C 100 60 200 60 200 120 S 300 180 300 120 S 200 60 200 120 S 100 180 100 120"/>
-    </defs>
+  <svg id="stage" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <!-- Group with perspective transform -->
+    <g id="scene" transform="translate(0,0) scale(1,0.6) rotate(-15 400 200)">
+      <defs>
+        <!-- Stylised infinity path (smooth, not 8-like) -->
+        <path id="infPath" d="M400 200 C400 60 600 60 600 200 C600 340 400 340 400 200 C400 60 200 60 200 200 C200 340 400 340 400 200 Z"/>
+      </defs>
 
-    <!-- Track (side‑view perspective) -->
-    <use href="#infinityPath" class="track" transform="translate(0,-10) scale(1,0.6) rotate(-15 200 120)" />
+      <!-- Visible track -->
+      <use href="#infPath" class="track"/>
+      <!-- Animated glowing trail -->
+      <use href="#infPath" class="trail" style="--trailDur:10s"/>
 
-    <!-- Glowing trail that loops forever -->
-    <use href="#infinityPath" class="trail" style="--dur:6s" transform="translate(0,-10) scale(1,0.6) rotate(-15 200 120)" />
-
-    <!-- Moving dots -->
-    <circle id="p1" class="dot" r="4"/>
-    <circle id="p2" class="dot" r="4"/>
-    <circle id="p3" class="dot" r="4"/>
+      <!-- Animated dots -->
+      <circle id="p1" class="dot" r="6"/>
+      <circle id="p2" class="dot" r="6"/>
+      <circle id="p3" class="dot" r="6"/>
+    </g>
 
     <script type="application/ecmascript"><![CDATA[
-      // Clone the transformed path to measure the correct length
-      const original = document.getElementById('infinityPath');
-      const clone = original.cloneNode();
-      const trans = 'translate(0,-10) scale(1,0.6) rotate(-15 200 120)';
-      clone.setAttribute('transform', trans);
-      clone.setAttribute('visibility', 'hidden');
-      clone.setAttribute('fill', 'none');
-      document.querySelector('svg').appendChild(clone);
-      const len = clone.getTotalLength();
-
-      // Points with randomised speed
-      const pts = [
-        {el:document.getElementById('p1'), t:Math.random(), speed:Math.random()*0.002+0.001},
-        {el:document.getElementById('p2'), t:Math.random(), speed:Math.random()*0.002+0.001},
-        {el:document.getElementById('p3'), t:Math.random(), speed:Math.random()*0.002+0.001}
+      const path = document.getElementById('infPath');
+      const total = path.getTotalLength();
+      const dots = [
+        {el:document.getElementById('p1'), t:Math.random(), speed:Math.random()*0.0015+0.0007},
+        {el:document.getElementById('p2'), t:Math.random(), speed:Math.random()*0.0015+0.0007},
+        {el:document.getElementById('p3'), t:Math.random(), speed:Math.random()*0.0015+0.0007},
       ];
-
-      function randomiseSpeeds(){
-        for(const p of pts){
-          p.speed = Math.random()*0.002+0.001;
-        }
+      function randomise(){
+        dots.forEach(d=>d.speed=Math.random()*0.0015+0.0007);
       }
-      setInterval(randomiseSpeeds,5000);
-
-      function tick(){
-        for(const p of pts){
-          p.t = (p.t + p.speed) % 1;
-          const pos = clone.getPointAtLength(p.t * len);
-          p.el.setAttribute('cx', pos.x);
-          p.el.setAttribute('cy', pos.y);
-        }
-        requestAnimationFrame(tick);
+      setInterval(randomise,5000);
+      function step(){
+        dots.forEach(d=>{
+          d.t=(d.t+d.speed)%1;
+          const {x,y}=path.getPointAtLength(d.t*total);
+          d.el.setAttribute('cx',x);
+          d.el.setAttribute('cy',y);
+        });
+        requestAnimationFrame(step);
       }
-      tick();
+      step();
     ]]></script>
   </svg>
 </body>
