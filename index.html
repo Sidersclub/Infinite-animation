@@ -1,0 +1,43 @@
+<svg viewBox="0 0 400 200" width="400" height="200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <path id="infinityPath" d="M 100,100 C 100,40 200,40 200,100 S 300,160 300,100 S 200,40 200,100 S 100,160 100,100" fill="none" stroke="black" stroke-width="1"/>
+    <circle id="point" r="4" fill="black" />
+  </defs>
+
+  <!-- Infinity shape -->
+  <use href="#infinityPath" stroke="black" stroke-width="1" fill="none" transform="rotate(-10, 200, 100)" />
+
+  <!-- Animated points -->
+  <circle id="p1" r="4" fill="black" />
+  <circle id="p2" r="4" fill="black" />
+  <circle id="p3" r="4" fill="black" />
+
+  <script type="application/ecmascript"><![CDATA[
+    const path = document.getElementById('infinityPath');
+    const length = path.getTotalLength();
+
+    const points = [
+      { el: document.getElementById('p1'), t: Math.random(), speed: Math.random() * 0.002 + 0.001 },
+      { el: document.getElementById('p2'), t: Math.random(), speed: Math.random() * 0.002 + 0.001 },
+      { el: document.getElementById('p3'), t: Math.random(), speed: Math.random() * 0.002 + 0.001 }
+    ];
+
+    function updateSpeeds() {
+      for (const p of points) {
+        p.speed = Math.random() * 0.002 + 0.001; // new random speed between 0.001 and 0.003
+      }
+    }
+    setInterval(updateSpeeds, 5000);
+
+    function animate() {
+      for (const p of points) {
+        p.t = (p.t + p.speed) % 1;
+        const pos = path.getPointAtLength(p.t * length);
+        p.el.setAttribute('cx', pos.x);
+        p.el.setAttribute('cy', pos.y);
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+  ]]></script>
+</svg>
